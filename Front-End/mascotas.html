@@ -128,13 +128,13 @@
                 raza: document.getElementById("mascotaRaza").value,
                 cedulaCliente: document.getElementById("mascotaDuenio").value
             };
-            enviarDatos("http://gestiondemascotasapi.azurewebsites.net/Controlador/mascotasControlador.php?op=crear", data, 'POST');
+            enviarDatos("http://mascotaswebapi.azurewebsites.net/Controlador/mascotasControlador.php?op=crear", data, 'POST');
             this.reset(); // Limpia los campos del formulario
         });
 
         // Función para cargar las mascotas desde el servidor
         async function cargarMascotas() {
-            const response = await fetch("http://gestiondemascotasapi.azurewebsites.net/Controlador/mascotasControlador.php?op=listar");
+            const response = await fetch("http://mascotaswebapi.azurewebsites.net/Controlador/mascotasControlador.php?op=listar");
             const mascotas = await response.json();
             const tbody = document.getElementById("tablaMascotas").getElementsByTagName("tbody")[0];
             tbody.innerHTML = ""; // Limpiar la tabla antes de agregar nuevos registros
@@ -165,7 +165,7 @@
 
         // Función para cargar los clientes (dueños) desde el servidor
         async function cargarClientes() {
-            const response = await fetch("http://gestiondemascotasapi.azurewebsites.net/Controlador/clientesControlador.php?op=listar");
+            const response = await fetch("http://mascotaswebapi.azurewebsites.net/Controlador/clientesControlador.php?op=listar");
             const clientes = await response.json();
             const selectDuenio = document.getElementById("mascotaDuenio");
             selectDuenio.innerHTML = "";
@@ -218,7 +218,7 @@
                 cedulaCliente: row.cells[4].getElementsByTagName("input")[0].value
             };
 
-            await enviarDatos("http://gestiondemascotasapi.azurewebsites.net/Controlador/mascotasControlador.php?op=actualizar", data, 'PUT');
+            await enviarDatos("http://mascotaswebapi.azurewebsites.net/Controlador/mascotasControlador.php?op=actualizar", data, 'PUT');
         }
 
         // Función para cancelar la edición y restaurar los valores originales
@@ -247,7 +247,7 @@
         async function eliminarMascota(idMascota) {
             const confirmar = confirm("¿Estás seguro de eliminar esta mascota?");
             if (confirmar) {
-                await fetch("http://gestiondemascotasapi.azurewebsites.net/Controlador/mascotasControlador.php?op=eliminar", {
+                await fetch("http://mascotaswebapi.azurewebsites.net/Controlador/mascotasControlador.php?op=eliminar", {
                     method: "DELETE",
                     headers: {
                         "Content-Type": "application/json"

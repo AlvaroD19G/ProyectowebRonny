@@ -1,8 +1,8 @@
 <?php
-$host = 'gestionmascotas.mysql.database.azure.com';
-$dbname = 'dbmascotas';
-$username = 'mascotas'; 
-$password = 'Admin123'; 
+$host = 'gestionmascotasweb.mysql.database.azure.com';
+$dbname = 'mascotasweb';
+$username = 'adminuser@mascotasweb'; 
+$password = 'Admin123!'; 
 
 try {
     $pdo = new PDO("mysql:host=$host;dbname=$dbname", $username, $password);
