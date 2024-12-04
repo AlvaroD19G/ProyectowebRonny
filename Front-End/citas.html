@@ -120,13 +120,13 @@
                 hora: document.getElementById("citaHora").value,
                 idMascota: document.getElementById("citaMascota").value
             };
-            enviarDatos("http://mascotaswebapi.azurewebsites.net/Controlador/citasControlador.php?op=crear", data, 'POST');
+            enviarDatos("http://mascotaswebapi.azurewebsites.net/ProyectowebRonny/Controlador/citasControlador.php?op=crear", data, 'POST');
             this.reset(); // Limpia los campos del formulario
         });
 
         // Función para cargar las citas desde el servidor
         async function cargarCitas() {
-            const response = await fetch("http://mascotaswebapi.azurewebsites.net/Controlador/citasControlador.php?op=listar");
+            const response = await fetch("http://mascotaswebapi.azurewebsites.net/ProyectowebRonny/Controlador/citasControlador.php?op=listar");
             const citas = await response.json();
             const tbody = document.getElementById("tablaCitas").getElementsByTagName("tbody")[0];
             tbody.innerHTML = ""; // Limpiar la tabla antes de agregar nuevos registros
@@ -156,7 +156,7 @@
 
         // Función para cargar las mascotas al select
         async function cargarMascotas() {
-            const response = await fetch("http://mascotaswebapi.azurewebsites.net/Controlador/mascotasControlador.php?op=listar");
+            const response = await fetch("http://mascotaswebapi.azurewebsites.net/ProyectowebRonny/Controlador/mascotasControlador.php?op=listar");
             const mascotas = await response.json();
             const selectMascota = document.getElementById("citaMascota");
 
@@ -205,7 +205,7 @@
                 idMascota: row.cells[3].getElementsByTagName("input")[0].value
             };
 
-            await enviarDatos("http://mascotaswebapi.azurewebsites.net/Controlador/citasControlador.php?op=actualizar", data, 'PUT');
+            await enviarDatos("http://mascotaswebapi.azurewebsites.net/ProyectowebRonny/Controlador/citasControlador.php?op=actualizar", data, 'PUT');
         }
 
         // Función para cancelar la edición y restaurar los valores originales
@@ -228,7 +228,7 @@ async function eliminarCita(idCita) {
     const data = { idCita };
 
     try {
-        const response = await fetch("http://mascotaswebapi.azurewebsites.net/Controlador/citasControlador.php?op=eliminar", {
+        const response = await fetch("http://mascotaswebapi.azurewebsites.net/ProyectowebRonny/Controlador/citasControlador.php?op=eliminar", {
             method: 'DELETE',  // Usamos el método DELETE para la eliminación
             headers: {
                 "Content-Type": "application/json"
