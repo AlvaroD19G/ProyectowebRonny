@@ -1,0 +1,255 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CRUD Veterinaria - Clientes</title>
+
+    <!-- Enlazando Bootstrap -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+        }
+
+        .form-control, .btn {
+            border-radius: 5px;
+        }
+
+        .table th, .table td {
+            vertical-align: middle;
+        }
+
+        .btn-custom {
+            padding: 8px 16px;
+            font-size: 16px;
+            border-radius: 5px;
+        }
+
+        .table td button {
+            width: 80px;
+        }
+        .btn-regresar {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+        }
+    </style>
+</head>
+<body>
+    <!-- Botón Regresar -->
+    <a href="inicio.html" class="btn btn-secondary btn-regresar">
+        <i class="bi bi-arrow-left-circle"></i> Regresar
+    </a>
+    <div class="container">
+        <h1 class="text-center my-4">Gestión de Clientes Veterinarios</h1>
+
+        <!-- Formulario para agregar un cliente -->
+        <div class="row justify-content-center">
+            <div class="col-md-8">
+                <form id="formCliente" class="mb-4 shadow-lg p-4">
+                    <h2 class="text-center mb-3">Agregar Cliente</h2>
+                    <div class="mb-3">
+                        <label for="clienteCedula" class="form-label">Cédula:</label>
+                        <input type="text" id="clienteCedula" name="cedula" class="form-control" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="clienteNombre" class="form-label">Nombre:</label>
+                        <input type="text" id="clienteNombre" name="nombre" class="form-control" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="clienteDireccion" class="form-label">Dirección:</label>
+                        <input type="text" id="clienteDireccion" name="direccion" class="form-control" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="clienteTelefono" class="form-label">Teléfono:</label>
+                        <input type="text" id="clienteTelefono" name="telefono" class="form-control" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="clienteEmail" class="form-label">Email:</label>
+                        <input type="email" id="clienteEmail" name="email" class="form-control" required>
+                    </div>
+                    <button type="submit" class="btn btn-success w-100">Agregar Cliente</button>
+                </form>
+            </div>
+        </div>
+
+        <!-- Tabla de clientes -->
+        <h2 class="text-center mb-4">Clientes Registrados</h2>
+        <table id="tablaClientes" class="table table-striped table-hover">
+            <thead>
+                <tr>
+                    <th>Cédula</th>
+                    <th>Nombre</th>
+                    <th>Dirección</th>
+                    <th>Teléfono</th>
+                    <th>Email</th>
+                    <th>Acciones</th>
+                </tr>
+            </thead>
+            <tbody>
+                <!-- Los datos de los clientes se llenarán aquí mediante JavaScript -->
+            </tbody>
+        </table>
+    </div>
+
+    <!-- Enlazando Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.11.6/dist/umd/popper.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.min.js"></script>
+
+    <script>
+        // Función para enviar datos al servidor
+        async function enviarDatos(url, data, method = 'POST') {
+            try {
+                const response = await fetch(url, {
+                    method: method,
+                    headers: {
+                        "Content-Type": "application/json"
+                    },
+                    body: JSON.stringify(data)
+                });
+                const result = await response.json();
+                alert(result.message || "Registro procesado exitosamente.");
+                cargarClientes();  // Recargar la lista después de agregar, editar o eliminar
+            } catch (error) {
+                console.error("Error:", error);
+                alert("Error al procesar la solicitud.");
+            }
+        }
+
+        // Manejador del formulario Cliente
+        document.getElementById("formCliente").addEventListener("submit", function (e) {
+            e.preventDefault();
+            const data = {
+                cedula: document.getElementById("clienteCedula").value,
+                nombre: document.getElementById("clienteNombre").value,
+                direccion: document.getElementById("clienteDireccion").value,
+                telefono: document.getElementById("clienteTelefono").value,
+                email: document.getElementById("clienteEmail").value
+            };
+            enviarDatos("http://gestiondemascotasapi.azurewebsites.net/Controlador/clientesControlador.php?op=crear", data, 'POST');
+            this.reset(); // Limpia los campos del formulario
+        });
+
+        // Función para cargar los clientes desde el servidor
+        async function cargarClientes() {
+            const response = await fetch("http://gestiondemascotasapi.azurewebsites.net/Controlador/clientesControlador.php?op=listar");
+            const clientes = await response.json();
+            const tbody = document.getElementById("tablaClientes").getElementsByTagName("tbody")[0];
+            tbody.innerHTML = ""; // Limpiar la tabla antes de agregar nuevos registros
+
+            clientes.forEach(cliente => {
+                const row = tbody.insertRow();
+                row.insertCell(0).textContent = cliente.cedula;
+                row.insertCell(1).textContent = cliente.nombre;
+                row.insertCell(2).textContent = cliente.direccion;
+                row.insertCell(3).textContent = cliente.telefono;
+                row.insertCell(4).textContent = cliente.email;
+
+                const accionesCell = row.insertCell(5);
+                const editBtn = document.createElement("button");
+                editBtn.textContent = "Editar";
+                editBtn.className = "btn btn-warning btn-sm me-2";
+                editBtn.onclick = () => editarCliente(cliente.cedula, row);
+
+                const deleteBtn = document.createElement("button");
+                deleteBtn.textContent = "Eliminar";
+                deleteBtn.className = "btn btn-danger btn-sm";
+                deleteBtn.onclick = () => eliminarCliente(cliente.cedula);
+
+                accionesCell.appendChild(editBtn);
+                accionesCell.appendChild(deleteBtn);
+            });
+        }
+
+        // Función para editar un cliente en la fila
+        function editarCliente(cedula, row) {
+            const originalData = {
+                cedula: row.cells[0].textContent,
+                nombre: row.cells[1].textContent,
+                direccion: row.cells[2].textContent,
+                telefono: row.cells[3].textContent,
+                email: row.cells[4].textContent
+            };
+
+            row.cells[1].innerHTML = `<input type="text" class="form-control" value="${originalData.nombre}" />`;
+            row.cells[2].innerHTML = `<input type="text" class="form-control" value="${originalData.direccion}" />`;
+            row.cells[3].innerHTML = `<input type="text" class="form-control" value="${originalData.telefono}" />`;
+            row.cells[4].innerHTML = `<input type="email" class="form-control" value="${originalData.email}" />`;
+
+            const saveBtn = document.createElement("button");
+            saveBtn.textContent = "Guardar";
+            saveBtn.className = "btn btn-success btn-sm me-2";
+            saveBtn.onclick = () => guardarEdicion(cedula, row, originalData);
+
+            const cancelBtn = document.createElement("button");
+            cancelBtn.textContent = "Cancelar";
+            cancelBtn.className = "btn btn-danger btn-sm";
+            cancelBtn.onclick = () => cancelarEdicion(row, originalData);
+
+            row.cells[5].innerHTML = ''; // Limpiar el botón de editar
+            row.cells[5].appendChild(saveBtn);
+            row.cells[5].appendChild(cancelBtn);
+        }
+
+        // Función para guardar los cambios de un cliente editado
+        async function guardarEdicion(cedula, row, originalData) {
+            const data = {
+                cedula: cedula,
+                nombre: row.cells[1].getElementsByTagName("input")[0].value,
+                direccion: row.cells[2].getElementsByTagName("input")[0].value,
+                telefono: row.cells[3].getElementsByTagName("input")[0].value,
+                email: row.cells[4].getElementsByTagName("input")[0].value
+            };
+
+            await enviarDatos("http://gestiondemascotasapi.azurewebsites.net/Controlador/clientesControlador.php?op=actualizar", data, 'PUT');
+        }
+
+        // Función para cancelar la edición y restaurar los valores originales
+        function cancelarEdicion(row, originalData) {
+            row.cells[1].textContent = originalData.nombre;
+            row.cells[2].textContent = originalData.direccion;
+            row.cells[3].textContent = originalData.telefono;
+            row.cells[4].textContent = originalData.email;
+
+            const editBtn = document.createElement("button");
+            editBtn.textContent = "Editar";
+            editBtn.className = "btn btn-warning btn-sm me-2";
+            editBtn.onclick = () => editarCliente(row.cells[0].textContent, row);
+
+            const deleteBtn = document.createElement("button");
+            deleteBtn.textContent = "Eliminar";
+            deleteBtn.className = "btn btn-danger btn-sm";
+            deleteBtn.onclick = () => eliminarCliente(row.cells[0].textContent);
+
+            row.cells[5].innerHTML = ''; 
+            row.cells[5].appendChild(editBtn);
+            row.cells[5].appendChild(deleteBtn);
+        }
+
+        // Función para eliminar un cliente
+        async function eliminarCliente(cedula) {
+            const confirmar = confirm("¿Estás seguro de eliminar este cliente?");
+            if (confirmar) {
+                await fetch("http://gestiondemascotasapi.azurewebsites.net/Controlador/clientesControlador.php?op=eliminar", {
+                    method: "DELETE",
+                    headers: {
+                        "Content-Type": "application/json"
+                    },
+                    body: JSON.stringify({ cedula: cedula })
+                });
+                alert("Cliente eliminado exitosamente.");
+                cargarClientes();  // Recargar la lista después de eliminar
+            }
+        }
+
+        // Cargar los clientes al inicio
+        cargarClientes();
+    </script>
+</body>
+</html>

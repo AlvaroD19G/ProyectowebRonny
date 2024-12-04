@@ -1,0 +1,253 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CRUD Veterinaria - Citas</title>
+
+    <!-- Enlazando Bootstrap -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            padding: 0;
+        }
+
+        .container {
+            max-width: 1200px;
+        }
+
+        .form-control, .btn {
+            border-radius: 5px;
+        }
+
+        .table th, .table td {
+            vertical-align: middle;
+        }
+
+        .btn-custom {
+            padding: 8px 16px;
+            font-size: 16px;
+            border-radius: 5px;
+        }
+        .btn-regresar {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+        }
+    </style>
+</head>
+<body>
+    <!-- Botón Regresar -->
+    <a href="inicio.html" class="btn btn-secondary btn-regresar">
+        <i class="bi bi-arrow-left-circle"></i> Regresar
+    </a>
+    <div class="container">
+        <h1 class="text-center my-4">Gestión de Citas Veterinarias</h1>
+
+        <!-- Formulario para agregar una cita -->
+        <div class="row justify-content-center">
+            <div class="col-md-8">
+                <form id="formCita" class="mb-4 shadow-lg p-4">
+                    <h2 class="text-center mb-3">Agregar Cita</h2>
+                    <div class="mb-3">
+                        <label for="citaFecha" class="form-label">Fecha:</label>
+                        <input type="date" id="citaFecha" name="fecha" class="form-control" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="citaHora" class="form-label">Hora:</label>
+                        <input type="time" id="citaHora" name="hora" class="form-control" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="citaMascota" class="form-label">Mascota:</label>
+                        <select id="citaMascota" name="idMascota" class="form-select" required>
+                            <!-- Las opciones de las mascotas se llenarán mediante JavaScript -->
+                        </select>
+                    </div>
+                    <button type="submit" class="btn btn-success w-100">Agregar Cita</button>
+                </form>
+            </div>
+        </div>
+
+        <!-- Tabla de citas -->
+        <h2 class="text-center mb-4">Citas Registradas</h2>
+        <table id="tablaCitas" class="table table-striped table-hover">
+            <thead>
+                <tr>
+                    <th>ID Cita</th>
+                    <th>Fecha</th>
+                    <th>Hora</th>
+                    <th>Mascota</th>
+                    <th>Acciones</th>
+                </tr>
+            </thead>
+            <tbody>
+                <!-- Los datos de las citas se llenarán aquí mediante JavaScript -->
+            </tbody>
+        </table>
+    </div>
+
+    <!-- Enlazando Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.11.6/dist/umd/popper.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.min.js"></script>
+
+    <script>
+        // Función para enviar datos al servidor
+        async function enviarDatos(url, data, method = 'POST') {
+            try {
+                const response = await fetch(url, {
+                    method: method,
+                    headers: {
+                        "Content-Type": "application/json"
+                    },
+                    body: JSON.stringify(data)
+                });
+                const result = await response.json();
+                alert(result.message || "Registro procesado exitosamente.");
+                cargarCitas();  // Recargar la lista después de agregar, editar o eliminar
+            } catch (error) {
+                console.error("Error:", error);
+                alert("Error al procesar la solicitud.");
+            }
+        }
+
+        // Manejador del formulario Cita
+        document.getElementById("formCita").addEventListener("submit", function (e) {
+            e.preventDefault();
+            const data = {
+                fecha: document.getElementById("citaFecha").value,
+                hora: document.getElementById("citaHora").value,
+                idMascota: document.getElementById("citaMascota").value
+            };
+            enviarDatos("http://gestiondemascotasapi.azurewebsites.net/Controlador/citasControlador.php?op=crear", data, 'POST');
+            this.reset(); // Limpia los campos del formulario
+        });
+
+        // Función para cargar las citas desde el servidor
+        async function cargarCitas() {
+            const response = await fetch("http://gestiondemascotasapi.azurewebsites.net/Controlador/citasControlador.php?op=listar");
+            const citas = await response.json();
+            const tbody = document.getElementById("tablaCitas").getElementsByTagName("tbody")[0];
+            tbody.innerHTML = ""; // Limpiar la tabla antes de agregar nuevos registros
+
+            citas.forEach(cita => {
+                const row = tbody.insertRow();
+                row.insertCell(0).textContent = cita.idCita;
+                row.insertCell(1).textContent = cita.fecha;
+                row.insertCell(2).textContent = cita.hora;
+                row.insertCell(3).textContent = `${cita.idMascota} - ${cita.mascotaNombre}`;  // Aquí agregamos el idMascota y nombre
+
+                const accionesCell = row.insertCell(4);
+                const editBtn = document.createElement("button");
+                editBtn.textContent = "Editar";
+                editBtn.className = "btn btn-warning btn-sm me-2";
+                editBtn.onclick = () => editarCita(cita.idCita, row);
+
+                const deleteBtn = document.createElement("button");
+                deleteBtn.textContent = "Eliminar";
+                deleteBtn.className = "btn btn-danger btn-sm";
+                deleteBtn.onclick = () => eliminarCita(cita.idCita);
+
+                accionesCell.appendChild(editBtn);
+                accionesCell.appendChild(deleteBtn);
+            });
+        }
+
+        // Función para cargar las mascotas al select
+        async function cargarMascotas() {
+            const response = await fetch("http://gestiondemascotasapi.azurewebsites.net/Controlador/mascotasControlador.php?op=listar");
+            const mascotas = await response.json();
+            const selectMascota = document.getElementById("citaMascota");
+
+            selectMascota.innerHTML = "<option value='' disabled selected>Seleccione una mascota</option>";
+            mascotas.forEach(mascota => {
+                const option = document.createElement("option");
+                option.value = mascota.idMascota;
+                option.textContent = `${mascota.idMascota} - ${mascota.nombre}`;
+                selectMascota.appendChild(option);
+            });
+        }
+
+        // Función para editar una cita en la fila
+        function editarCita(idCita, row) {
+            const originalData = {
+                fecha: row.cells[1].textContent,
+                hora: row.cells[2].textContent,
+                idMascota: row.cells[3].textContent.split(' - ')[0]  // Extraer solo el ID de la mascota
+            };
+
+            row.cells[1].innerHTML = `<input type="date" class="form-control" value="${originalData.fecha}" />`;
+            row.cells[2].innerHTML = `<input type="time" class="form-control" value="${originalData.hora}" />`;
+            row.cells[3].innerHTML = `<input type="text" class="form-control" value="${originalData.idMascota}" />`; // Se cambiará por un select después
+
+            const saveBtn = document.createElement("button");
+            saveBtn.textContent = "Guardar";
+            saveBtn.className = "btn btn-success btn-sm me-2";
+            saveBtn.onclick = () => guardarEdicion(idCita, row, originalData);
+
+            const cancelBtn = document.createElement("button");
+            cancelBtn.textContent = "Cancelar";
+            cancelBtn.className = "btn btn-danger btn-sm";
+            cancelBtn.onclick = () => cancelarEdicion(row, originalData);
+
+            row.cells[4].innerHTML = ''; // Limpiar el botón de editar
+            row.cells[4].appendChild(saveBtn);
+            row.cells[4].appendChild(cancelBtn);
+        }
+
+        // Función para guardar los cambios de una cita editada
+        async function guardarEdicion(idCita, row, originalData) {
+            const data = {
+                idCita: idCita,
+                fecha: row.cells[1].getElementsByTagName("input")[0].value,
+                hora: row.cells[2].getElementsByTagName("input")[0].value,
+                idMascota: row.cells[3].getElementsByTagName("input")[0].value
+            };
+
+            await enviarDatos("http://gestiondemascotasapi.azurewebsites.net/Controlador/citasControlador.php?op=actualizar", data, 'PUT');
+        }
+
+        // Función para cancelar la edición y restaurar los valores originales
+        function cancelarEdicion(row, originalData) {
+            row.cells[1].textContent = originalData.fecha;
+            row.cells[2].textContent = originalData.hora;
+            row.cells[3].textContent = originalData.idMascota;
+            row.cells[4].innerHTML = ''; // Limpiar los botones
+            const editBtn = document.createElement("button");
+            editBtn.textContent = "Editar";
+            editBtn.className = "btn btn-warning btn-sm";
+            editBtn.onclick = () => editarCita(row.cells[0].textContent, row);
+            row.cells[4].appendChild(editBtn);
+        }
+// Función para eliminar una cita
+async function eliminarCita(idCita) {
+    const confirmation = confirm("¿Estás seguro de que deseas eliminar esta cita?");
+    if (!confirmation) return; // Si el usuario cancela, no eliminar
+
+    const data = { idCita };
+
+    try {
+        const response = await fetch("http://gestiondemascotasapi.azurewebsites.net/Controlador/citasControlador.php?op=eliminar", {
+            method: 'DELETE',  // Usamos el método DELETE para la eliminación
+            headers: {
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify(data)
+        });
+        const result = await response.json();
+        alert(result.message || "Cita eliminada exitosamente.");
+        cargarCitas();  // Recargar la lista después de eliminar
+    } catch (error) {
+        console.error("Error:", error);
+        alert("Error al eliminar la cita.");
+    }
+}
+
+        window.onload = async function () {
+            await cargarMascotas();
+            cargarCitas();
+        };
+    </script>
+</body>
+</html>
